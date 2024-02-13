@@ -3,6 +3,9 @@
 
 Port for Domintell
 :author: Zilvinas Binisevicius <zilvinas@binis.me>
+
+WebSockets support
+:author: ZonderPit <zonderp@milkymail.org>
 """
 import logging
 import time
@@ -48,7 +51,9 @@ class Controller(object):
         self.__subscribers = []
         self.__scan_callback = None
         self._modules = {}
-        if ":" in port:
+        if "ws" in port:
+            self.connection = domintell.WSConnection(port, self)
+        elif ":" in port:
             self.connection = domintell.UDPConnection(port, self)
         else:
             self.connection = domintell.RS232Connection(port, self)
@@ -59,7 +64,7 @@ class Controller(object):
 
         :return: None
         """
-        assert isinstance(data, bytes)
+        # assert isinstance(data, bytes)
         self.parser.feed(data)
 
     def subscribe(self, subscriber):
@@ -117,6 +122,16 @@ class Controller(object):
     def login(self, password):
         message = domintell.LoginRequest(password)
         self.send(message)
+
+    def loginpsw(self, login, password):
+        message = domintell.LoginPswRequest(login, self.parser.compute_hash(password))
+        self.send(message)
+        time.sleep(0.5)
+
+    def requestsalt(self, login):
+        message = domintell.SaltRequest(login)
+        self.send(message)
+        time.sleep(0.5)
          
     def new_message(self, message):
         """

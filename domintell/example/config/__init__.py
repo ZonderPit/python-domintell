@@ -1,1 +1,1 @@
-from config.credentials import host
+from domintell.example.config.credentials import host

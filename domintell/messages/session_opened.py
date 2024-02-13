@@ -1,5 +1,5 @@
 """
-Session opened  Message
+Session opened Message
 :author: Zilvinas Binisevicius <zilvinas@binis.me>
 """
 import json

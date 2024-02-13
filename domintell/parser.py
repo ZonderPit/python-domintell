@@ -4,15 +4,21 @@
 Port for Domintell
 :author: Zilvinas Binisevicius <zilvinas@binis.me>
 
+WebSockets support
+:author: ZonderPit <zonderp@milkymail.org>
+
 """
 import logging
 import domintell
+import re
+import hashlib
 
 NORMAL_MODE = 0
 APP_INFO_MODE = 1
-MSG_SESSION_OPENED =  'INFO:Session opened:INFO'
-MSG_SESSION_CLOSED =  'INFO:Session closed:INFO'
+MSG_SESSION_OPENED = 'INFO:Session opened:INFO'
+MSG_SESSION_CLOSED = 'INFO:Session closed:INFO'
 MSG_SESSION_TIMEOUT = 'INFO:Session timeout:INFO'
+MSG_SALT_INFO = 'INFO:REQUESTSALT:'
 
 class ParserError(Exception):
     """
@@ -30,6 +36,8 @@ class DomintellParser(object):
         self._mode = NORMAL_MODE
         self.logger = logging.getLogger('domintell')
         self.controller = controller
+        self._nonce = ''
+        self._salt = ''
 
     def feed(self, data):
         """
@@ -41,7 +49,9 @@ class DomintellParser(object):
         # data = data.decode('ascii').lstrip('\r\n ')
         # my domintell version uses ascii for communication
         # FIXME need to eoncoding in config
-        data = data.decode('iso8859_13').lstrip('\r\n ')
+        if isinstance(data, bytes):
+            data = data.decode('iso8859_13')
+        data = data.lstrip('\r\n ').rstrip('\r\n ')
         if len(data) < 10:
             return
 
@@ -53,7 +63,7 @@ class DomintellParser(object):
         """
         parse message and return Message object, or None        
         """
-        data = data.lstrip('\r\n ')
+        data = data.lstrip('\r\n ').rstrip('\r\n ')
         assert len(data) > 0
         assert len(data) >= domintell.MINIMUM_MESSAGE_SIZE
 
@@ -107,6 +117,9 @@ class DomintellParser(object):
                     return domintell.SessionClosedMessage(data=data)
                 elif data[0:25] == MSG_SESSION_TIMEOUT:
                     return domintell.SessionTimeoutMessage(data=data)
+                elif data[0:len(MSG_SALT_INFO)] == MSG_SALT_INFO:
+                    self._nonce, self._salt = _extract_nonce_salt(data)
+                    return domintell.SaltMessage(data=data)
                 return domintell.InfoMessage(module_type, data)
 
             # normal message
@@ -123,5 +136,16 @@ class DomintellParser(object):
     def contains_any(self, str, set):
         return 1 in [c in str for c in set]
 
-    
+    def compute_hash(self, password):
+        salted_password = password + self._salt
+        hashed_salted_password = hashlib.sha512(salted_password.encode('UTF-8')).hexdigest()
+        hashed_salted_password_with_nonce = hashed_salted_password + self._nonce
+        return hashlib.sha512(hashed_salted_password_with_nonce.encode('UTF-8')).hexdigest()
 
+
+def _extract_nonce_salt(message):
+    nonce_match = re.search(r":NONCE=(\w+):", message)
+    nonce = nonce_match.group(1) if nonce_match else ""
+    salt_match = re.search(r":SALT=(\w+):", message)
+    salt = salt_match.group(1) if salt_match else ""
+    return nonce, salt

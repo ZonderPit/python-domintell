@@ -1,5 +1,5 @@
 """
-Session opened  Message
+Session closed  Message
 :author: Zilvinas Binisevicius <zilvinas@binis.me>
 """
 import json
@@ -7,7 +7,7 @@ import domintell
 
 class SessionClosedMessage(domintell.Message):
     """
-    Session opened message
+    Session closed message
     """
 
     def __init__(self, moduleType=None, data=None):

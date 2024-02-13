@@ -7,11 +7,14 @@ from domintell.messages.appinfo_request import AppInfoRequest
 from domintell.messages.module_info import ModuleInfoMessage
 from domintell.messages.ping import Ping
 from domintell.messages.login_request import LoginRequest
+from domintell.messages.loginpsw_request import LoginPswRequest
+from domintell.messages.salt_request import SaltRequest
 from domintell.messages.info import InfoMessage
 from domintell.messages.control import ControllMessage
 from domintell.messages.session_closed import SessionClosedMessage
 from domintell.messages.session_opened import SessionOpenedMessage
 from domintell.messages.session_timeout import SessionTimeoutMessage
+from domintell.messages.salt_message import SaltMessage
 # status messages
 from domintell.messages.ai_status import GenericAIStatusMessage
 from domintell.messages.ao_status import GenericAOStatusMessage

@@ -65,6 +65,6 @@ from domintell.controller import Controller, DomintellConnection
 
 if not on_app_engine():
     try:
-        from domintell.connections import UDPConnection, RS232Connection
+        from domintell.connections import RS232Connection, UDPConnection, WSConnection
     except ImportError:
         pass
