@@ -1,5 +1,5 @@
 *.pyc
-config/
+domintell/example/config/
 credentials.py
 build
 dist
@@ -7,4 +7,5 @@ python_domintell.egg-info
 site-packages
 modules.js
 modules.pkl
-.vscode
+.vscode/
+.venv/
