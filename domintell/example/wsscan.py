@@ -21,7 +21,7 @@ please create a simple credentials.py:
 host = {
     'ADDRESS': 'wss://192.168.0.1:17481',
     'USERNAME': '<your login>',
-    'SECRET': '<your clear password>'
+    'PASSWORD': '<your cleartext password>'
 }
 """
 
@@ -31,11 +31,10 @@ controller = domintell.Controller(host['ADDRESS'])
 try:
     controller.subscribe(_on_message)
 
-    logging.info('REQUESTSALT')
-    controller.requestsalt(host['USERNAME'])
+    logging.info('LOGIN')
+    controller.login(host['USERNAME'], host['PASSWORD'])
 
-    logging.info('LOGINPSW')
-    controller.loginpsw(host['USERNAME'], host['SECRET'])
+    time.sleep(1)
 
     logging.info('Starting scan')
     controller.scan(None)

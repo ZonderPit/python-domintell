@@ -6,10 +6,10 @@ import domintell
 
 class Ping(domintell.Command):
     """
-        send: &PING message
+        send: HELLO message
     """
     def __init__(self):
         domintell.Command.__init__(self)
 
     def command(self):
-        return "&PING"
+        return "HELLO"

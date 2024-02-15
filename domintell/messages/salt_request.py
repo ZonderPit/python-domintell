@@ -17,4 +17,3 @@ class SaltRequest(domintell.Command):
 
     def is_binary(self):
         return True
-

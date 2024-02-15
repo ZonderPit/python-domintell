@@ -19,6 +19,7 @@ class SaltMessage(domintell.Message):
         MSG_SALT_INFO = 'INFO:REQUESTSALT:'
         if data[0:len(MSG_SALT_INFO)] == MSG_SALT_INFO:
             self.moduleType = 'SALT_INFO'
+            self.nonce, self.salt = _extract_nonce_salt(data)
             self._message = data
 
     def populate(self, serialNumber, dataType, dataString):
@@ -32,3 +33,10 @@ class SaltMessage(domintell.Message):
         json_dict['info_message'] = self._message
         return json.dumps(json_dict)
 
+
+def _extract_nonce_salt(message):
+    nonce_match = re.search(r":NONCE=(\w+):", message)
+    nonce = nonce_match.group(1) if nonce_match else ""
+    salt_match = re.search(r":SALT=(\w+):", message)
+    salt = salt_match.group(1) if salt_match else ""
+    return nonce, salt

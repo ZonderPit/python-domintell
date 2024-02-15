@@ -1,5 +1,4 @@
 *.pyc
-domintell/example/config/
 credentials.py
 build
 dist

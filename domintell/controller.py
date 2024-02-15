@@ -51,6 +51,8 @@ class Controller(object):
         self.__subscribers = []
         self.__scan_callback = None
         self._modules = {}
+        self._login = ''
+        self._password = ''
         if "ws" in port:
             self.connection = domintell.WSConnection(port, self)
         elif ":" in port:
@@ -119,20 +121,29 @@ class Controller(object):
         message = domintell.AppInfoRequest()
         self.send(message)
 
-    def login(self, password):
+    def login(self, *args):
+        if len(args) == 1:
+            self._login_udp(args[0])
+        elif len(args) == 2:
+            self._login_wss_requestsalt(args[0], args[1])
+        else:
+            raise ValueError("Incorrect number of arguments. Expected: password (udp) OR login and password (wss).")
+
+    def _login_udp(self, password):
         message = domintell.LoginRequest(password)
         self.send(message)
+        time.sleep(2)
 
-    def loginpsw(self, login, password):
-        message = domintell.LoginPswRequest(login, self.parser.compute_hash(password))
-        self.send(message)
-        time.sleep(0.5)
-
-    def requestsalt(self, login):
+    def _login_wss_requestsalt(self, login, password):
+        self._login = login
+        self._password = password
         message = domintell.SaltRequest(login)
         self.send(message)
-        time.sleep(0.5)
-         
+
+    def _login_wss_loginpsw(self, nonce, salt):
+        message = domintell.LoginPswRequest(self._login, self._password, nonce, salt)
+        self.send(message)
+
     def new_message(self, message):
         """
         :return: None
@@ -154,6 +165,9 @@ class Controller(object):
                     m = self._modules
                     # move encoding into config , encoding='iso8859_13'
                     json.dump(m, f, cls=ModuleJSONEncoder)
+        elif isinstance(message, domintell.SaltMessage):
+            logging.info('Salt/Nonce received')
+            self._login_wss_loginpsw(message.nonce, message.salt)
         
         # forward message to listeners
         for subscriber in self.__subscribers:
@@ -169,7 +183,7 @@ class Controller(object):
         if module_type in domintell.ModuleRegistry:
             # we support this module
             if serial_number in self._modules:
-                # serial numbeer already registered
+                # serial number already registered
                 pass
             else:
                 module = domintell.ModuleRegistry[module_type](serial_number, self)

@@ -18,6 +18,7 @@ import ssl
 import re
 from websockets.sync.client import connect
 
+
 class Protocol(serial.threaded.Protocol):
     """Serial protocol."""
 
@@ -43,17 +44,11 @@ class RS232Connection(domintell.DomintellConnection):
     """
 
     BAUD_RATE = 38400
-
     BYTE_SIZE = serial.EIGHTBITS
-
     PARITY = serial.PARITY_NONE
- 
     STOPBITS = serial.STOPBITS_ONE
-
     XONXOFF = 0
-
     RTSCTS = 1
-
     SLEEP_TIME = 60 / 1000
 
     def __init__(self, device, controller=None):
@@ -122,7 +117,7 @@ class UDPConnection(domintell.DomintellConnection):
     """
     SLEEP_TIME = 60 / 1000
 
-    def __init__(self, device, controller=None, ping_interval=0):
+    def __init__(self, device, controller=None, ping_interval=50):
         domintell.DomintellConnection.__init__(self)
         self.logger = logging.getLogger('domintell')
         self._device = device
@@ -156,7 +151,6 @@ class UDPConnection(domintell.DomintellConnection):
         self._ping_process = threading.Thread(None, self.ping_daemon,
                                             "domintell-ping-writer", (), {})
         self._ping_process.daemon = True
-
 
     def stop(self):
         """Close UDP."""
@@ -199,12 +193,11 @@ class UDPConnection(domintell.DomintellConnection):
                 callback()
     
     def ping_daemon(self):
-        """Put ping message into write thread every 60 sec"""
-        s = self.ping_interval
+        """Put ping message into write thread every 50 sec"""
         while True:
             p = domintell.messages.Ping()
             self.send(p)
-            time.sleep(s)
+            time.sleep(self.ping_interval)
 
     def start_ping(self, interval=-1):
         """
@@ -229,7 +222,7 @@ class WSConnection(domintell.DomintellConnection):
     """
     SLEEP_TIME = 60 / 1000
 
-    def __init__(self, device, controller=None, ping_interval=0):
+    def __init__(self, device, controller=None, ping_interval=50):
         domintell.DomintellConnection.__init__(self)
         self.logger = logging.getLogger('domintell')
         self._device = device
@@ -241,6 +234,7 @@ class WSConnection(domintell.DomintellConnection):
         ssl_context.verify_mode = ssl.CERT_NONE
 
         server_ip_match = re.search(r"(\d+\.\d+\.\d+\.\d+)", device)
+        # server_ip_match = re.search(r":\/\/?([a-zA-Z0-9\.-_]+)", device)
         server_ip = server_ip_match.group(1) if server_ip_match else "192.168.0.1"
         server_port_match = re.search(r":(\d+)", device)
         server_port = server_port_match.group(1) if server_port_match else "17481"
@@ -295,6 +289,7 @@ class WSConnection(domintell.DomintellConnection):
         """Read thread."""
         while True:
             data = self._ws.recv(1024)
+            self.logger.info(" <<<RECEIVING<<< " + str(data).rstrip('\r\n '))
             self.feed_parser(data)
 
     def write_daemon(self):
@@ -302,7 +297,8 @@ class WSConnection(domintell.DomintellConnection):
         while True:
             (message, callback) = self._write_queue.get(block=True)
             self.logger.info("Sending message to WebSocket: %s", str(message))
-            self.logger.debug("Sending controll message:  %s", message.to_string())
+            self.logger.info(" >>>SENDING>>> " + message.to_string())
+            # self.logger.debug("Sending control message: %s", message.to_string())
             if message.is_binary():
                 self._ws.send(message.to_string())
             else:
@@ -312,12 +308,11 @@ class WSConnection(domintell.DomintellConnection):
                 callback()
 
     def ping_daemon(self):
-        """Put ping message into write thread every 60 sec"""
-        s = self.ping_interval
+        """Put ping message into write thread every 50 sec"""
         while True:
             p = domintell.messages.Ping()
             self.send(p)
-            time.sleep(s)
+            time.sleep(self.ping_interval)
 
     def start_ping(self, interval=-1):
         """
