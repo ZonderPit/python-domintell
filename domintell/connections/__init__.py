@@ -233,8 +233,8 @@ class WSConnection(domintell.DomintellConnection):
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
 
-        server_ip_match = re.search(r"(\d+\.\d+\.\d+\.\d+)", device)
-        # server_ip_match = re.search(r":\/\/?([a-zA-Z0-9\.-_]+)", device)
+        # server_ip_match = re.search(r"(\d+\.\d+\.\d+\.\d+)", device)
+        server_ip_match = re.search(r"://?([a-zA-Z0-9._-]+)", device)
         server_ip = server_ip_match.group(1) if server_ip_match else "192.168.0.1"
         server_port_match = re.search(r":(\d+)", device)
         server_port = server_port_match.group(1) if server_port_match else "17481"

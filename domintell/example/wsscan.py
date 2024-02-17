@@ -11,6 +11,7 @@ import sys
 import domintell
 from config import host
 
+
 def _on_message(message):
     print('Received message : ', message)
 

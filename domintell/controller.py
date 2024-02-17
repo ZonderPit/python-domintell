@@ -125,14 +125,16 @@ class Controller(object):
         if len(args) == 1:
             self._login_udp(args[0])
         elif len(args) == 2:
-            self._login_wss_requestsalt(args[0], args[1])
+            if args[0] == '':
+                self._login_udp(args[1])
+            else:
+                self._login_wss_requestsalt(args[0], args[1])
         else:
             raise ValueError("Incorrect number of arguments. Expected: password (udp) OR login and password (wss).")
 
     def _login_udp(self, password):
         message = domintell.LoginRequest(password)
         self.send(message)
-        time.sleep(2)
 
     def _login_wss_requestsalt(self, login, password):
         self._login = login
